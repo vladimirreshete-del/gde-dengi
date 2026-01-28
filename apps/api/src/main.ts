@@ -3,6 +3,7 @@ import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
 import cookie from '@fastify/cookie';
 import fastifyStatic from '@fastify/static';
+// Fix: Use standard named import for PrismaClient which is the recommended way for modern TypeScript and ESM environments.
 import { PrismaClient } from '@prisma/client';
 import TelegramBot from 'node-telegram-bot-api';
 import crypto from 'crypto';
