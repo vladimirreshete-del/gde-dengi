@@ -1,0 +1,55 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Где мои деньги?...</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --tg-theme-bg-color: #f8fafc;
+      }
+      body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        -webkit-tap-highlight-color: transparent;
+        overflow-x: hidden;
+        user-select: none;
+      }
+      .tg-bg { background-color: var(--tg-theme-bg-color, #f8fafc); }
+      .tg-text { color: var(--tg-theme-text-color, #0f172a); }
+      input::-webkit-outer-spin-button,
+      input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "recharts": "https://esm.sh/recharts@^3.7.0",
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
+    "react": "https://esm.sh/react@^19.2.4",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "@prisma/client": "https://esm.sh/@prisma/client@^7.3.0",
+    "node-telegram-bot-api": "https://esm.sh/node-telegram-bot-api@^0.67.0",
+    "crypto": "https://esm.sh/crypto@^1.0.1",
+    "fastify": "https://esm.sh/fastify@^5.7.2",
+    "@fastify/cors": "https://esm.sh/@fastify/cors@^11.2.0",
+    "@fastify/cookie": "https://esm.sh/@fastify/cookie@^11.0.2",
+    "@fastify/jwt": "https://esm.sh/@fastify/jwt@^10.0.0",
+    "url": "https://esm.sh/url@^0.11.4",
+    "path": "https://esm.sh/path@^0.12.7",
+    "@fastify/static": "https://esm.sh/@fastify/static@^9.0.0"
+  }
+}
+</script>
+</head>
+  <body class="bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 transition-colors duration-200">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

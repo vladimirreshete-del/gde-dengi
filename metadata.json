@@ -1,0 +1,9 @@
+
+{
+  "name": "Где мои деньги?...",
+  "description": "A Telegram Mini App for managing your daily budget limit until the next payday. Features a sleek mobile UI, powerful admin panel, and premium subscriptions.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
