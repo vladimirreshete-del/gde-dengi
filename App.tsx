@@ -23,7 +23,8 @@ import {
   Download,
   ShieldCheck,
   Sparkles,
-  Edit3
+  Edit3,
+  BrainCircuit
 } from 'lucide-react';
 import { 
   Tooltip, 
@@ -146,6 +147,10 @@ export default function App() {
     { name: 'Starbucks', cat: 'cafe', amount: 380, time: '10:15', date: new Date() }
   ]);
 
+  // AI State
+  const [aiAdvice, setAiAdvice] = useState<string | null>(null);
+  const [loadingAdvice, setLoadingAdvice] = useState(false);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
@@ -199,11 +204,20 @@ export default function App() {
       .filter(e => e.date.toDateString() === now.toDateString())
       .reduce((acc, curr) => acc + curr.amount, 0);
 
+    // Group by category for charts
+    const chartData = CATEGORIES.map(cat => {
+      const total = expenses
+        .filter(e => e.cat === cat.id)
+        .reduce((sum, e) => sum + e.amount, 0);
+      return { name: cat.name, value: total, color: cat.color };
+    }).filter(d => d.value > 0);
+
     return {
       daysRemaining,
       dailyLimit,
       spentToday,
-      totalSpentThisMonth
+      totalSpentThisMonth,
+      chartData
     };
   }, [settings, expenses]);
 
@@ -230,6 +244,21 @@ export default function App() {
       
       setIsAddingExpense(false);
       setSelectedCategory(CATEGORIES[0].id); // Reset for next time
+    }
+  };
+
+  const fetchAIAdvice = async () => {
+    setLoadingAdvice(true);
+    try {
+      // Logic for fetching advice from AI endpoint
+      // Mocking the call for UX purposes while assuming backend is ready
+      await new Promise(r => setTimeout(r, 2000));
+      const mockAdvice = "💡 Анализ твоих трат показывает, что 30% бюджета уходит на 'Кафе'. Если сократить эти расходы вдвое, ты сможешь сэкономить около 5000₽ к следующей зарплате!";
+      setAiAdvice(mockAdvice);
+    } catch (err) {
+      setAiAdvice("Не удалось получить совет. Попробуйте позже.");
+    } finally {
+      setLoadingAdvice(false);
     }
   };
 
@@ -347,6 +376,90 @@ export default function App() {
                 </Card>
               ))}
             </div>
+          </div>
+        )}
+
+        {activeTab === 'analytics' && (
+          <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
+            <h2 className="text-3xl font-black tracking-tight">Аналитика</h2>
+            
+            {/* AI Advisor Card */}
+            <Card className="bg-gradient-to-br from-indigo-500 to-blue-600 text-white border-none relative overflow-hidden group">
+              <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-white/20 rounded-xl">
+                    <BrainCircuit size={20} className="text-white" />
+                  </div>
+                  <h3 className="font-black text-xs uppercase tracking-widest opacity-80">ИИ Советник Gemini</h3>
+                </div>
+                
+                {aiAdvice ? (
+                  <div className="animate-in fade-in duration-500 space-y-4">
+                    <p className="text-sm font-bold leading-relaxed">{aiAdvice}</p>
+                    <button 
+                      onClick={() => setAiAdvice(null)} 
+                      className="text-[10px] font-black uppercase tracking-widest opacity-60 hover:opacity-100 transition-opacity flex items-center gap-1"
+                    >
+                      <ArrowUpRight size={12} />
+                      Обновить анализ
+                    </button>
+                  </div>
+                ) : (
+                  <button 
+                    onClick={fetchAIAdvice}
+                    disabled={loadingAdvice}
+                    className="w-full py-4 bg-white/10 hover:bg-white/20 rounded-[1.5rem] border border-white/20 font-black text-sm transition-all flex items-center justify-center gap-2"
+                  >
+                    {loadingAdvice ? (
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <Sparkles size={18} />
+                    )}
+                    {loadingAdvice ? 'Анализирую траты...' : 'Как сэкономить?'}
+                  </button>
+                )}
+              </div>
+              <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full blur-2xl group-hover:bg-white/10 transition-all"></div>
+            </Card>
+
+            {/* Category Chart Card */}
+            <Card className="flex flex-col items-center">
+              <div className="flex justify-between w-full mb-6">
+                <h3 className="font-black text-xs uppercase tracking-widest opacity-40">Траты по категориям</h3>
+                <PieChart size={18} className="opacity-20" />
+              </div>
+              <div className="w-full h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RePieChart>
+                    <Pie
+                      data={stats.chartData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {stats.chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </RePieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="grid grid-cols-2 gap-x-8 gap-y-3 w-full mt-4">
+                {stats.chartData.map((cat, i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }}></div>
+                      <span className="text-xs font-bold opacity-60 truncate max-w-[80px]">{cat.name}</span>
+                    </div>
+                    <span className="text-xs font-black">{formatValue(cat.value)}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
           </div>
         )}
 

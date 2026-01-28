@@ -1,16 +1,18 @@
+
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
 import cookie from '@fastify/cookie';
 import fastifyStatic from '@fastify/static';
-// Fix: Use standard named import for PrismaClient which is the recommended way for modern TypeScript and ESM environments.
-import { PrismaClient } from '@prisma/client';
+// Fix: Use default import for @prisma/client to resolve "no exported member PrismaClient" error in some ESM environments
+import PrismaClientPkg from '@prisma/client';
+const { PrismaClient } = PrismaClientPkg;
 import TelegramBot from 'node-telegram-bot-api';
 import crypto from 'crypto';
 import path from 'path';
 import { fileURLToPath } from 'url';
-// Added explicit import of process to resolve typing error: Property 'exit' does not exist on type 'Process'.
 import process from 'node:process';
+import { GoogleGenAI } from "@google/genai";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,10 +20,16 @@ const __dirname = path.dirname(__filename);
 const prisma = new PrismaClient();
 const fastify = Fastify({ logger: true });
 
+// --- BigInt Serialization Fix ---
+// Fastify (JSON.stringify) doesn't know how to handle BigInt by default.
+// This ensures BigInt fields are sent as strings in JSON responses.
+(BigInt.prototype as any).toJSON = function () {
+  return this.toString();
+};
+
 // Environment
 const BOT_TOKEN = process.env.BOT_TOKEN || '';
 const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || 'secret';
-// На Render в продакшене используем относительные пути, в деве — локалхост
 const WEBAPP_URL = process.env.RENDER_EXTERNAL_URL || 'http://localhost:5173';
 
 // Initialize Bot
@@ -44,7 +52,6 @@ fastify.register(cookie);
 fastify.register(jwt, { secret: ADMIN_JWT_SECRET });
 
 // Serve Static Files (Frontend)
-// В режиме продакшена файлы лежат в корневой папке dist после vite build
 fastify.register(fastifyStatic, {
   root: path.join(__dirname, '../../../dist'),
   prefix: '/',
@@ -163,7 +170,28 @@ fastify.get('/api/stats', { preHandler: [verifyTelegramAuth] }, async (request: 
   };
 });
 
-// SPA fallback: любой маршрут, не начинающийся с /api или не являющийся файлом, отдает index.html
+// AI Financial Advice Route using Gemini API
+fastify.get('/api/ai/advice', { preHandler: [verifyTelegramAuth] }, async (request: any) => {
+  const userId = BigInt(request.tgUser.id);
+  const expenses = await prisma.expense.findMany({
+    where: { userId, deletedAt: null },
+    take: 20,
+    orderBy: { spentAt: 'desc' }
+  });
+
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: `Проанализируй эти траты и дай 3 коротких, полезных совета по экономии на русском языке. Будь кратким: ${JSON.stringify(expenses)}`,
+    config: {
+      systemInstruction: "Ты - профессиональный финансовый консультант. Твои советы должны быть практическими, дружелюбными и очень короткими.",
+    }
+  });
+
+  return { data: response.text };
+});
+
+// SPA fallback
 fastify.setNotFoundHandler((request, reply) => {
   if (request.raw.url?.startsWith('/api')) {
     reply.status(404).send({ error: 'API route not found' });
@@ -179,7 +207,6 @@ const start = async () => {
     console.log(`Server running at http://0.0.0.0:${port}`);
   } catch (err) {
     fastify.log.error(err);
-    // Explicitly using the imported process to call exit(1) to resolve the 'Property exit does not exist' error.
     process.exit(1);
   }
 };
