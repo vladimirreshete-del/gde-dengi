@@ -1,0 +1,9 @@
+aiogram==3.4.1
+asyncpg==0.29.0
+SQLAlchemy==2.0.30
+alembic==1.13.2
+pydantic-settings==2.2.1
+python-dotenv==1.0.1
+structlog==24.1.0
+redis==5.0.4
+python-dateutil==2.9.0.post0
